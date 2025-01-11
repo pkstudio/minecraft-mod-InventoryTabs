@@ -68,6 +68,7 @@ import net.minecraft.world.level.block.SpawnerBlock;
 import net.minecraft.world.level.block.StonecutterBlock;
 import net.minecraft.world.level.block.StructureBlock;
 import net.minecraft.world.level.block.piston.MovingPistonBlock;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
@@ -104,10 +105,13 @@ public class TabProviderRegistry {
             LOGGER.warn("InventoryTabs: DEBUG ENABLED");
         }
         Set<String> invalidSet = new HashSet<>();
+        Set<String> modSet = new HashSet<>();
         Set<String> tagSet = new HashSet<>();
         Set<String> blockSet = new HashSet<>();
         for (String overrideEntry : InventoryTabsConfig.excludeTab.get()) {
-            if (overrideEntry.startsWith("#")) {
+            if (overrideEntry.startsWith("@")) {
+                modSet.add(overrideEntry.trim().substring(1));
+            } else if (overrideEntry.startsWith("#")) {
                 tagSet.add(overrideEntry.trim().substring(1));
             } else {
                 blockSet.add(overrideEntry);
@@ -123,7 +127,7 @@ public class TabProviderRegistry {
             } else if (block instanceof CraftingTableBlock && !(block instanceof FletchingTableBlock) || block instanceof AnvilBlock || block instanceof CartographyTableBlock || block instanceof GrindstoneBlock || block instanceof LoomBlock || block instanceof StonecutterBlock) {
                 registerUniqueBlock(block);
             }
-            configRemove(block, tagSet, invalidSet);
+            configRemove(block, modSet, tagSet, invalidSet);
         });
         configRemove(blockSet);
         configAdd();
@@ -173,10 +177,22 @@ public class TabProviderRegistry {
             removeSimpleBlock(new ResourceLocation(overrideEntry));
         }
     }
-    private static void configRemove(Block block, Set<String> tagSet, Set<String> invalidSet) {
-        for (String overrideEntry : tagSet) {
-            String[] splitEntry = overrideEntry.split(":"); // split into two parts: namespace, id
-            if (isValid(overrideEntry, splitEntry, invalidSet)) {
+    private static void configRemove(Block block, Set<String> modSet, Set<String> tagSet, Set<String> invalidSet) {
+        for (String modEntry : modSet) {
+            if (ForgeRegistries.BLOCKS.getKey(block).getNamespace().equals(modEntry)) {
+                removeSimpleBlock(block);
+                if (InventoryTabsConfig.debugEnabled.get()) {
+                    LOGGER.info("Excluding: %s".formatted(block));
+                }
+            }
+        }
+
+        for (String tagEntry : tagSet) {
+            String[] splitEntry = tagEntry.split(":"); // split into two parts: namespace, id
+            if (modSet.contains(splitEntry[0])) {
+                continue; // skip as block should already be removed via namespace
+            }
+            if (isValid(tagEntry, splitEntry, invalidSet)) {
                 if (block.defaultBlockState().is(TagKey.create(Registries.BLOCK, new ResourceLocation(splitEntry[0], splitEntry[1])))) {
                     removeSimpleBlock(block);
                     if (InventoryTabsConfig.debugEnabled.get()) {
