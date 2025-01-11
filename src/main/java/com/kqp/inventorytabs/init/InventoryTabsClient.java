@@ -2,6 +2,7 @@ package com.kqp.inventorytabs.init;
 
 import java.util.concurrent.CompletableFuture;
 
+import com.kqp.inventorytabs.api.TabProviderRegistry;
 import com.kqp.inventorytabs.interf.TabManagerContainer;
 import com.mojang.blaze3d.platform.InputConstants;
 
@@ -15,6 +16,7 @@ import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.fml.event.config.ModConfigEvent.Reloading;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class InventoryTabsClient {
@@ -32,6 +34,13 @@ public class InventoryTabsClient {
         MinecraftForge.EVENT_BUS.addListener(InventoryTabsClient::onKeyPressed);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(InventoryTabsClient::onRegisterKeyMappings);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(InventoryTabsClient::onReloadAssets);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(InventoryTabsClient::onReloadConfig);
+    }
+
+    private static void onReloadConfig(Reloading event) {
+        if (event.getConfig().getModId().equals("inventorytabs")) {
+            TabProviderRegistry.init("reload");
+        }
     }
 
     private static void onReloadAssets(RegisterClientReloadListenersEvent event) {
@@ -67,7 +76,7 @@ public class InventoryTabsClient {
             InventoryTabsConfig.renderTabs.set(DISABLE_TABS_KEY_BIND.consumeClick() != InventoryTabsConfig.renderTabs.get());
         }
     }
-    
+
     public static boolean screenSupported(Screen screen) {
         return (screen instanceof AbstractContainerScreen<?>) && !(screen instanceof CreativeModeInventoryScreen);
     }
