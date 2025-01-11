@@ -68,7 +68,6 @@ import net.minecraft.world.level.block.SpawnerBlock;
 import net.minecraft.world.level.block.StonecutterBlock;
 import net.minecraft.world.level.block.StructureBlock;
 import net.minecraft.world.level.block.piston.MovingPistonBlock;
-import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.registries.ForgeRegistries;
 
 /**
